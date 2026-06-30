@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "altpay-py"
+dynamic = ["version"]
+description = "Official Python SDK for the AltPay crypto-payments API (sync + async)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "AltPay" }]
+keywords = ["altpay", "payments", "crypto", "usdt", "api", "sdk"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx>=0.24",
+    "pydantic>=2.0",
+]
+
+[project.urls]
+Homepage = "https://altpay.money"
+Documentation = "https://docs.altpay.money/"
+Source = "https://github.com/altpaysdk/py-sdk"
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-asyncio>=0.21", "respx>=0.20", "mypy>=1.5", "ruff>=0.1"]
+
+[tool.hatch.version]
+path = "altpay/__meta__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["altpay"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
