@@ -37,7 +37,7 @@ Documentation: https://docs.altpay.money/docs
 from .__meta__ import __version__
 from .client import AltPay, AsyncAltPay
 from .credentials import Credentials
-from .enums import FiatCurrency, MerchantStatus, PaymentMethod, PaymentStatus, WithdrawalStatus
+from .enums import FeePaidBy, FiatCurrency, MerchantStatus, PaymentMethod, PaymentStatus, WithdrawalStatus
 from .errors import (
     AltPayError,
     AltPayTransportError,
@@ -84,6 +84,7 @@ __all__ = [
     "PaymentStatus",
     "PaymentMethod",
     "FiatCurrency",
+    "FeePaidBy",
     "MerchantStatus",
     "WithdrawalStatus",
     # Models

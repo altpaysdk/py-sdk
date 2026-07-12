@@ -11,7 +11,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Iterable
 
-from ..enums import FiatCurrency, PaymentStatus
+from ..enums import FeePaidBy, FiatCurrency, PaymentStatus
 from ..models import AssetBalance, Balance, Invoice, InvoicePage, Service, Wallet, WalletDeposit
 from .base import APICall, Resource, drop_none
 
@@ -35,6 +35,8 @@ class Invoices(Resource):
         url_callback: str | None = None,
         url_success: str | None = None,
         url_return: str | None = None,
+        fee_paid_by: FeePaidBy | str | None = None,
+        **extra: Any,
     ) -> Invoice:
         """Create an invoice and get a hosted checkout URL.
 
@@ -52,6 +54,14 @@ class Invoices(Resource):
                 here when the invoice is paid. Verify it with :class:`altpay.WebhookVerifier`.
             url_success: Optional redirect after a successful payment.
             url_return: Optional redirect after the payer cancels.
+            fee_paid_by: Who bears the platform commission - :attr:`~altpay.enums.FeePaidBy.MERCHANT`
+                (default; deducted from your settlement) or
+                :attr:`~altpay.enums.FeePaidBy.CUSTOMER` (added on top of what the payer is
+                charged). Omit to use the server default (``MERCHANT``).
+            **extra: Additional fields forwarded verbatim in the request body. Lets you use
+                invoice options the server adds after this SDK version without upgrading -
+                pass e.g. ``discount_percent=5``. Explicit arguments above take precedence
+                over the same key given here.
 
         Returns:
             The created :class:`~altpay.models.Invoice` (status ``WAITING``).
@@ -63,18 +73,24 @@ class Invoices(Resource):
 
         API reference: https://docs.altpay.money/docs/invoices#create
         """
-        payload = drop_none(
-            {
-                "uuid": uuid,
-                "amount": _amount_str(amount),
-                "fiat_currency": _enum_value(fiat_currency),
-                "lifetime": lifetime,
-                "networks": list(networks) if networks is not None else None,
-                "except_networks": list(except_networks) if except_networks is not None else None,
-                "url_callback": url_callback,
-                "url_success": url_success,
-                "url_return": url_return,
-            }
+        # Unknown/forward-compatible fields first, so the explicit, validated arguments
+        # below always win on any key collision.
+        payload = dict(extra)
+        payload.update(
+            drop_none(
+                {
+                    "uuid": uuid,
+                    "amount": _amount_str(amount),
+                    "fiat_currency": _enum_value(fiat_currency),
+                    "lifetime": lifetime,
+                    "networks": list(networks) if networks is not None else None,
+                    "except_networks": list(except_networks) if except_networks is not None else None,
+                    "url_callback": url_callback,
+                    "url_success": url_success,
+                    "url_return": url_return,
+                    "fee_paid_by": _enum_value(fee_paid_by) if fee_paid_by is not None else None,
+                }
+            )
         )
         return self._invoke(APICall("/api/v2/invoice/create", payload, Invoice.model_validate))
 

@@ -73,6 +73,19 @@ class FiatCurrency(str, Enum):
     EUR = "EUR"
 
 
+class FeePaidBy(str, Enum):
+    """Who bears the platform commission on an invoice.
+
+    * ``MERCHANT`` (default) - the commission is deducted from your settlement; the payer is
+      charged only the invoice amount.
+    * ``CUSTOMER`` - the commission is added on top of what the payer is charged, so you are
+      settled the full invoice principal.
+    """
+
+    MERCHANT = "MERCHANT"
+    CUSTOMER = "CUSTOMER"
+
+
 class MerchantStatus(str, Enum):
     """Account status of a merchant.
 

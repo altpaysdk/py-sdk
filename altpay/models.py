@@ -48,6 +48,8 @@ class Invoice(_Model):
         expired_at: Unix timestamp (seconds) when the invoice expires, or ``None``.
         status: The current :class:`~altpay.enums.PaymentStatus`.
         is_final: Whether ``status`` is terminal (no further changes).
+        fee_paid_by: Who bears the platform commission on this invoice - ``"MERCHANT"``
+            (deducted from your settlement) or ``"CUSTOMER"`` (charged on top of the payer).
         created_at: When the invoice was created.
         updated_at: When it last changed.
     """
@@ -64,6 +66,7 @@ class Invoice(_Model):
     expired_at: int | None = None
     status: PaymentStatus
     is_final: bool
+    fee_paid_by: str = "MERCHANT"
     created_at: datetime
     updated_at: datetime
 
