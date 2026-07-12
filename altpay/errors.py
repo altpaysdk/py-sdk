@@ -3,12 +3,12 @@
 Every failure raised by a client is an :class:`AltPayError`. Transport problems (timeouts,
 connection resets) raise :class:`AltPayTransportError`; anything the API answered with a
 non-2xx status raises an :class:`APIError` subclass chosen by HTTP status. The API reports
-its own machine-readable reason in the JSON body's ``detail`` field (e.g.
-``"invalid_signature"``, ``"invoice_not_found"``) - that string is preserved on
+its own machine-readable reason in the JSON body's ``detail`` field (for example
+``"invalid_signature"``, ``"invoice_not_found"``). That string is preserved on
 :attr:`APIError.detail` and drives the human-readable hint each exception carries.
 
-The exception you catch tells you the *category*; ``detail`` tells you the *specific*
-reason; the docstring and :attr:`APIError.hint` tell you how to fix it. The full catalogue,
+The exception you catch tells you the category; ``detail`` tells you the specific reason;
+the docstring and :attr:`APIError.hint` tell you how to fix it. The full catalogue,
 including every ``detail`` value, lives at https://docs.altpay.money/docs/http-codes.
 """
 
@@ -24,8 +24,8 @@ class AltPayError(Exception):
 class AltPayTransportError(AltPayError):
     """The request never produced an HTTP response.
 
-    Raised on connection failures, DNS errors, TLS errors and timeouts - i.e. the network,
-    not the API, is the problem. These are usually transient: retry with backoff, check
+    Raised on connection failures, DNS errors, TLS errors and timeouts: the network, not
+    the API, is the problem. These are usually transient. Retry with backoff, check
     connectivity and that ``base_url`` is reachable. The original exception is chained as
     ``__cause__``.
 
@@ -42,7 +42,7 @@ class APIError(AltPayError):
             ``None`` if the body had no such field.
         hint: A short, human-readable explanation of the likely cause and fix.
         response_body: The parsed JSON body (or raw text) for inspection.
-        request_id: The value of the response ``X-Request-Id`` header, if present - quote it
+        request_id: The value of the response ``X-Request-Id`` header, if present. Quote it
             in support requests.
     """
 
@@ -73,18 +73,18 @@ class APIError(AltPayError):
 
 
 class AuthenticationError(APIError):
-    """HTTP 401 - the request signature was rejected (``detail="invalid_signature"``).
+    """HTTP 401, the request signature was rejected (``detail="invalid_signature"``).
 
-    This single status covers every signing problem, deliberately, so an attacker cannot
-    tell *which* check failed. Walk through the common causes:
+    This single status covers every signing problem so an attacker cannot tell which check
+    failed. Common causes:
 
-    * Wrong ``api_secret``, ``api_key`` or ``merchant_id`` (most common - re-check the three
+    * Wrong ``api_secret``, ``api_key`` or ``merchant_id`` (most common: re-check the three
       credentials match one active key issued in your dashboard).
     * Clock skew: your ``X-Timestamp`` is outside the server's window. The SDK uses
       ``time.time()``; make sure the host clock is synced (NTP).
-    * A reused nonce (replay): only an issue if you sign requests yourself or retry with a
-      frozen nonce - let the SDK mint a fresh one per attempt.
-    * The signing canonical does not match (custom signing only) - prefer the SDK's
+    * A reused nonce (replay), only an issue if you sign requests yourself or retry with a
+      frozen nonce. Let the SDK mint a fresh one per attempt.
+    * The signing canonical does not match (custom signing only). Prefer the SDK's
       :func:`altpay.signing.sign_request` over hand-rolling it.
     * The API key was revoked or deactivated.
 
@@ -98,14 +98,14 @@ class AuthenticationError(APIError):
 
 
 class PermissionError_(APIError):
-    """HTTP 403 - authenticated, but not allowed to perform this action.
+    """HTTP 403, authenticated but not allowed to perform this action.
 
     Common ``detail`` values:
 
-    * ``ip_not_allowed`` - your server IP is not in the key's IP allowlist. Add it in the
+    * ``ip_not_allowed``: your server IP is not in the key's IP allowlist. Add it in the
       dashboard or disable the allowlist.
-    * ``ip_blocked`` - the IP was blocked for abuse; contact support.
-    * a merchant-approval message - your merchant account is not approved yet, so it cannot
+    * ``ip_blocked``: the IP was blocked for abuse; contact support.
+    * a merchant-approval message: your merchant account is not approved yet, so it cannot
       create invoices. Finish onboarding first.
 
     Named with a trailing underscore to avoid shadowing the builtin ``PermissionError``;
@@ -118,7 +118,7 @@ class PermissionError_(APIError):
 
 
 class NotFoundError(APIError):
-    """HTTP 404 - the referenced resource does not exist for your merchant.
+    """HTTP 404, the referenced resource does not exist for your merchant.
 
     Typically ``detail="invoice_not_found"``: the ``uuid``/``order_id`` you queried has no
     matching invoice under this merchant. Confirm you are using the right identifier (the
@@ -128,38 +128,38 @@ class NotFoundError(APIError):
     See https://docs.altpay.money/docs/http-codes#not-found
     """
 
-    default_hint = "Resource not found for this merchant - check the identifier and credentials."
+    default_hint = "Resource not found for this merchant. Check the identifier and credentials."
 
 
 class ValidationError(APIError):
-    """HTTP 400/422 - the request body failed validation (``detail="invalid_request"``).
+    """HTTP 400/422, the request body failed validation (``detail="invalid_request"``).
 
-    A field is missing, has the wrong type, or violates a constraint (e.g. ``amount`` not
-    greater than zero, ``lifetime`` outside 60-1440, a malformed callback URL). When you use
-    the typed request models the SDK validates locally first, so most of these are caught
-    before the request leaves your process.
+    A field is missing, has the wrong type, or violates a constraint (``amount`` not greater
+    than zero, ``lifetime`` outside 60-1440, a malformed callback URL). When you use the
+    typed request models the SDK validates locally first, so most of these are caught before
+    the request leaves your process.
 
     See https://docs.altpay.money/docs/http-codes#validation
     """
 
-    default_hint = "Request validation failed - check required fields, types and constraints."
+    default_hint = "Request validation failed. Check required fields, types and constraints."
 
 
 class ConflictError(APIError):
-    """HTTP 409 - the request conflicts with the resource's current state.
+    """HTTP 409, the request conflicts with the resource's current state.
 
     Examples: a payment method is already locked for an invoice, the invoice is already
-    paid, or it is no longer payable. These are state errors, not retryable as-is - fetch
+    paid, or it is no longer payable. These are state errors, not retryable as-is. Fetch
     the current invoice state and act on it.
 
     See https://docs.altpay.money/docs/http-codes#conflict
     """
 
-    default_hint = "State conflict - re-read the resource state; the action no longer applies."
+    default_hint = "State conflict. Re-read the resource state; the action no longer applies."
 
 
 class RateLimitError(APIError):
-    """HTTP 429 - too many requests (``detail="rate_limited"``).
+    """HTTP 429, too many requests (``detail="rate_limited"``).
 
     Attributes:
         retry_after: Seconds to wait before retrying, parsed from the ``Retry-After``
@@ -171,7 +171,7 @@ class RateLimitError(APIError):
     See https://docs.altpay.money/docs/http-codes#rate-limit
     """
 
-    default_hint = "Rate limited - back off and retry after the Retry-After interval."
+    default_hint = "Rate limited. Back off and retry after the Retry-After interval."
 
     def __init__(self, status_code: int, *, retry_after: float | None = None, **kwargs: object) -> None:
         self.retry_after = retry_after
@@ -179,16 +179,16 @@ class RateLimitError(APIError):
 
 
 class ServerError(APIError):
-    """HTTP 5xx - the API failed to handle a well-formed request.
+    """HTTP 5xx, the API failed to handle a well-formed request.
 
     Includes ``503 security_backend_unavailable`` (the API's nonce/replay store is down) and
-    ``502`` from an upstream payment provider. These are server-side and usually transient:
-    retry with backoff. If it persists, quote :attr:`APIError.request_id` to support.
+    ``502`` from an upstream payment provider. These are server-side and usually transient.
+    Retry with backoff. If it persists, quote :attr:`APIError.request_id` to support.
 
     See https://docs.altpay.money/docs/http-codes#server
     """
 
-    default_hint = "Server-side error - retry with backoff; quote request_id if it persists."
+    default_hint = "Server-side error. Retry with backoff; quote request_id if it persists."
 
 
 # Backwards-friendly alias so callers can ``except altpay.Forbidden`` without the underscore.
@@ -242,5 +242,5 @@ _HINTS: dict[str, str] = {
     "rate_limited": RateLimitError.default_hint,
     "security_backend_unavailable": "The API's replay-protection store is temporarily down. Retry shortly.",
     "no_accepted_methods": "The requested networks are not in this merchant's accepted methods.",
-    "quote_token_invalid": "The price quote token is invalid or expired - request a fresh quote.",
+    "quote_token_invalid": "The price quote token is invalid or expired. Request a fresh quote.",
 }

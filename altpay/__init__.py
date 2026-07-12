@@ -1,4 +1,4 @@
-"""AltPay - the official Python SDK for the AltPay crypto-payments API.
+"""Official Python SDK for the AltPay crypto-payments API.
 
 Quick start (sync)::
 

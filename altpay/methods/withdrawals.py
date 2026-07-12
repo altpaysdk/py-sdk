@@ -1,9 +1,9 @@
 """Payout (withdrawal) endpoints (``/api/v2/withdrawal/*``).
 
-For safety, the public API can only pay out to a TRUSTED address - one you added to your
-account in the dashboard, which requires your 2FA. A leaked API key therefore cannot move
-funds to a new, attacker-controlled address; the most it can do is repeat a payout to an
-address you already trust. To pay a new address, add it in the dashboard first.
+The public API can only pay out to a trusted address, one you added to your account in the
+dashboard behind 2FA. A leaked API key therefore cannot move funds to a new, attacker-controlled
+address; at worst it can repeat a payout to an address you already trust. To pay a new address,
+add it in the dashboard first.
 
 API reference: https://docs.altpay.money/docs/withdrawals
 """
@@ -20,12 +20,12 @@ from .base import APICall, Resource, drop_none
 class Withdrawals(Resource):
     """Payout operations. Reached via ``client.withdrawals``.
 
-    On the sync client each method returns its result directly; on the async client it
+    On the sync client each method returns its result directly. On the async client it
     returns an awaitable.
     """
 
     def estimate_fee(self, *, asset: str, network: str | None = None) -> WithdrawalFee:
-        """Preview the fees a withdrawal would incur (service percent + estimated network fee).
+        """Preview the fees a withdrawal would incur (service percent plus estimated network fee).
 
         Args:
             asset: The asset to withdraw (e.g. ``"USDT"``).
@@ -51,12 +51,11 @@ class Withdrawals(Resource):
         network: str | None = None,
         idempotency_key: str | None = None,
     ) -> Withdrawal:
-        """Request a payout of ``amount`` of ``asset`` to a TRUSTED ``address``.
+        """Request a payout of ``amount`` of ``asset`` to a trusted ``address``.
 
-        The address must already be trusted for this asset in your dashboard, or the API
-        rejects the request with 403 ``address_not_trusted`` - regardless of any account
-        whitelist toggle. This is the safety property: a leaked key cannot invent a new payout
-        destination.
+        The address must already be trusted for this asset in your dashboard, otherwise the API
+        rejects the request with 403 ``address_not_trusted``, regardless of any account whitelist
+        toggle. This is the safety property: a leaked key cannot invent a new payout destination.
 
         Args:
             asset: The asset to withdraw (e.g. ``"USDT"``).

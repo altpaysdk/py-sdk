@@ -1,10 +1,10 @@
 """The call-description layer shared by the sync and async clients.
 
-Each API method is described, not executed, by a resource: it returns an :class:`APICall`
+Each API method is described, not executed, by a resource. It returns an :class:`APICall`
 that names the endpoint path, the request payload and how to parse the response into a typed
 model. The client (sync or async) is the only thing that actually sends bytes, so the
-resource classes contain zero transport code and zero ``async`` - one definition serves both
-clients. This is the same "method object" idea aiogram uses, kept deliberately small.
+resource classes contain zero transport code and zero ``async``. One definition serves both
+clients.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ T = TypeVar("T")
 
 #: A function that executes an :class:`APICall`. The sync client passes one returning the
 #: value directly; the async client passes one returning an awaitable of the value. A
-#: resource is agnostic to which it got - it just returns whatever the invoker returns, so
+#: resource does not care which it got and returns whatever the invoker returns, so
 #: ``client.invoices.create(...)`` is a value on the sync client and an awaitable on the
 #: async one, with a single resource definition serving both.
 Invoker = Callable[["APICall[Any]"], Any]
@@ -42,7 +42,7 @@ class Resource:
     """Base for the resource groups (``invoices``, ``account``).
 
     Holds the client's invoker. A resource builds an :class:`APICall` and hands it to
-    ``self._invoke`` - so the same method body returns a value on the sync client and an
+    ``self._invoke``, so the same method body returns a value on the sync client and an
     awaitable on the async client, with no per-resource duplication.
     """
 
@@ -53,9 +53,9 @@ class Resource:
 
 
 def drop_none(payload: dict[str, Any]) -> dict[str, Any]:
-    """Remove keys whose value is ``None`` so optional fields are simply omitted.
+    """Remove keys whose value is ``None`` so optional fields are omitted.
 
-    The API treats an absent field and an explicit ``null`` differently for some optionals,
-    and omitting keeps request bodies (and therefore signatures) minimal and predictable.
+    The API treats an absent field and an explicit ``null`` differently for some optionals.
+    Omitting keeps request bodies (and therefore signatures) minimal and predictable.
     """
     return {key: value for key, value in payload.items() if value is not None}

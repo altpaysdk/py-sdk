@@ -1,9 +1,8 @@
 """Transport-agnostic request building and response parsing.
 
-The sync and async clients differ only in how they *send* bytes over the wire; everything
-else - serializing the body, signing it, choosing headers, unwrapping ``result``, turning a
-non-2xx status into a typed exception - is identical and lives here so there is exactly one
-implementation to reason about and audit.
+The sync and async clients differ only in how they send bytes over the wire. Everything
+else (serializing the body, signing it, choosing headers, unwrapping ``result``, turning a
+non-2xx status into a typed exception) is identical and lives here.
 
 A :class:`PreparedRequest` is a pure value: given credentials and a call, it produces the
 exact method/url/headers/body to send. :func:`parse_response` is a pure function from a raw
@@ -23,14 +22,14 @@ from ..signing import sign_request
 
 # The public API is JSON-only and every endpoint is POST (including reads). Bodies are
 # serialized compactly and deterministically; the exact bytes are what we hash and sign, so
-# the body that goes on the wire must be the body we signed - never re-serialize downstream.
+# the body that goes on the wire must be the body we signed. Never re-serialize downstream.
 _JSON_SEPARATORS = (",", ":")
 
 
 def serialize_body(payload: dict[str, Any] | None) -> bytes:
     """Serialize a request payload to the canonical bytes that get signed and sent.
 
-    ``None`` and ``{}`` both serialize to ``b""`` - the body-less endpoints (``me.get``,
+    ``None`` and ``{}`` both serialize to ``b""``. The body-less endpoints (``me.get``,
     ``invoice/services``) take no body, and the server hashes an empty body for them.
     """
     if not payload:

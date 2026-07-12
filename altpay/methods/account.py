@@ -19,8 +19,8 @@ class AccountResource(Resource):
     def get(self) -> Account:
         """Get your merchant and API-key identity.
 
-        A cheap, side-effect-free call - handy as a credential/connectivity check at startup:
-        success means your credentials sign correctly and the key is active.
+        Cheap and side-effect-free, so it works as a credential/connectivity check at
+        startup: success means your credentials sign correctly and the key is active.
 
         Returns:
             An :class:`~altpay.models.Account`.
@@ -33,7 +33,7 @@ class AccountResource(Resource):
         """Get paid volume per payment method, each in its own settlement asset.
 
         Unlike :meth:`Invoices.balance <altpay.methods.invoices.Invoices.balance>` (which
-        values everything in one fiat), this reports each method's native total - a RUB
+        values everything in one fiat), this reports each method's native total: a RUB
         off-chain method totals in RUB, a USD one in USD.
 
         Returns:

@@ -2,12 +2,12 @@
 
 Every API response is wrapped by the server as ``{"result": {...}}``. The clients unwrap
 ``result`` and validate the inner object into one of the models below, so you work with typed
-objects (with IDE completion and parsed types) rather than raw dicts.
+objects (IDE completion, parsed types) rather than raw dicts.
 
-Monetary and crypto amounts are returned by the API as strings to avoid float rounding, and
+Monetary and crypto amounts come back from the API as strings to avoid float rounding, and
 are kept as :class:`~decimal.Decimal` here for safe arithmetic. Timestamps are timezone-aware
-:class:`~datetime.datetime`. Identifiers that the API types as UUID are kept as ``str`` for
-ergonomics (you rarely need UUID semantics, and stringly ids round-trip cleanly).
+:class:`~datetime.datetime`. Identifiers the API types as UUID are kept as ``str`` for
+ergonomics: you rarely need UUID semantics, and string ids round-trip cleanly.
 
 These models are read-only views of API output. Request bodies are built from plain
 arguments by the method modules, so there is no separate "request model" to construct.
@@ -24,7 +24,7 @@ from .enums import FiatCurrency, MerchantStatus, PaymentStatus, WithdrawalStatus
 
 
 class _Model(BaseModel):
-    """Shared base: ignore unknown fields so a server adding a field never breaks an old SDK."""
+    """Shared base. Ignore unknown fields so a server adding a field never breaks an old SDK."""
 
     model_config = ConfigDict(extra="ignore", frozen=True)
 
@@ -48,7 +48,7 @@ class Invoice(_Model):
         expired_at: Unix timestamp (seconds) when the invoice expires, or ``None``.
         status: The current :class:`~altpay.enums.PaymentStatus`.
         is_final: Whether ``status`` is terminal (no further changes).
-        fee_paid_by: Who bears the platform commission on this invoice - ``"MERCHANT"``
+        fee_paid_by: Who bears the platform commission on this invoice. ``"MERCHANT"``
             (deducted from your settlement) or ``"CUSTOMER"`` (charged on top of the payer).
         created_at: When the invoice was created.
         updated_at: When it last changed.
@@ -170,7 +170,7 @@ class Account(_Model):
     Attributes:
         merchant_id: Your merchant UUID.
         merchant_name: Display name.
-        merchant_status: Account status - only ``APPROVED`` can create invoices.
+        merchant_status: Account status. Only ``APPROVED`` can create invoices.
         api_key_id: UUID of the API key the request authenticated with.
         api_key_name: The key's label.
         api_key_active: Whether the key is active.

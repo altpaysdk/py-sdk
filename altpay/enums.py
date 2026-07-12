@@ -1,8 +1,8 @@
 """Enumerations used across the public API.
 
 These mirror the server's vocabulary exactly. Each is a ``str`` enum, so a member compares
-equal to its wire value (``PaymentStatus.PAID == "paid"``) and serializes transparently -
-you can pass either a member or the raw string anywhere the SDK accepts one.
+equal to its wire value (``PaymentStatus.PAID == "paid"``) and serializes transparently. Pass
+either a member or the raw string anywhere the SDK accepts one.
 """
 
 from __future__ import annotations
@@ -13,20 +13,19 @@ from enum import Enum
 class PaymentStatus(str, Enum):
     """Lifecycle state of an invoice.
 
-    * ``WAITING`` - issued, awaiting payment.
-    * ``PARTIAL`` - underpaid (received less than due); still open.
-    * ``PAID`` - fully paid and confirmed (final). The webhook fires on this transition.
-    * ``EXPIRED`` - the lifetime window elapsed before payment (final).
-    * ``FAILED`` - the payment failed or was rejected (final).
+    * ``WAITING``: issued, awaiting payment.
+    * ``PARTIAL``: underpaid (received less than due), still open.
+    * ``PAID``: fully paid and confirmed (final). The webhook fires on this transition.
+    * ``EXPIRED``: the lifetime window elapsed before payment (final).
+    * ``FAILED``: the payment failed or was rejected (final).
 
     ``WAITING``/``PARTIAL`` are non-final; the other three are final
     (see :attr:`is_final`).
 
-    The member values are the wire strings of the public REST API
-    (``"waiting"``, ``"paid"``, ...). The webhook (``payment.updated``) reports the
-    same lifecycle with the server's *internal* uppercase names (``"CREATED"``,
-    ``"PAYED"``, ...); :meth:`_missing_` maps those onto the same members so both
-    transports decode to one canonical value.
+    The member values are the wire strings of the public API (``"waiting"``,
+    ``"paid"``, ...). Both the REST endpoints and the ``payment.updated`` webhook
+    report this same lowercase vocabulary, so responses and webhooks decode to one
+    canonical value with no per-transport translation.
     """
 
     WAITING = "waiting"
@@ -44,7 +43,7 @@ class PaymentStatus(str, Enum):
 class PaymentMethod(str, Enum):
     """A payment method the payer can settle with.
 
-    On-chain methods deliver to a generated deposit address; ``LOLZTEAM`` and ``CRYPTOBOT``
+    On-chain methods deliver to a generated deposit address. ``LOLZTEAM`` and ``CRYPTOBOT``
     are off-chain providers that redirect the payer to a hosted page. ``USDT_*`` names encode
     the network the stablecoin settles on (e.g. ``USDT_TRC20`` is USDT on TRON).
     """
@@ -76,9 +75,9 @@ class FiatCurrency(str, Enum):
 class FeePaidBy(str, Enum):
     """Who bears the platform commission on an invoice.
 
-    * ``MERCHANT`` (default) - the commission is deducted from your settlement; the payer is
+    * ``MERCHANT`` (default): the commission is deducted from your settlement; the payer is
       charged only the invoice amount.
-    * ``CUSTOMER`` - the commission is added on top of what the payer is charged, so you are
+    * ``CUSTOMER``: the commission is added on top of what the payer is charged, so you are
       settled the full invoice principal.
     """
 
@@ -104,7 +103,7 @@ class MerchantStatus(str, Enum):
 class WithdrawalStatus(str, Enum):
     """Lifecycle state of a payout request.
 
-    A new request is ``PENDING`` review; an operator then ``APPROVED`` it (funds are paid
+    A new request is ``PENDING`` review. An operator then ``APPROVED`` it (funds are paid
     out) or ``REJECTED`` it (the reserved amount is credited back to your balance).
     """
 
