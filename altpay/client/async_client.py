@@ -7,7 +7,7 @@ and the same request/response logic from :mod:`altpay.client.base`; only the I/O
 from __future__ import annotations
 
 import asyncio
-from typing import Any, TypeVar
+from typing import TypeVar
 
 import httpx
 

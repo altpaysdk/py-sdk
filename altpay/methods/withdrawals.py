@@ -11,7 +11,7 @@ API reference: https://docs.altpay.money/docs/withdrawals
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import List
 
 from ..models import Withdrawal, WithdrawalFee
 from .base import APICall, Resource, drop_none
@@ -89,7 +89,7 @@ class Withdrawals(Resource):
             APICall("/api/v2/withdrawal/create", payload, Withdrawal.model_validate)
         )
 
-    def list(self, *, limit: int = 20, offset: int = 0) -> list[Withdrawal]:
+    def list(self, *, limit: int = 20, offset: int = 0) -> List[Withdrawal]:
         """List your payout requests, newest first.
 
         Args:

@@ -9,7 +9,7 @@ API reference: https://docs.altpay.money/docs/invoices
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Iterable
+from typing import Any, Iterable, List
 
 from ..enums import FeePaidBy, FiatCurrency, PaymentStatus
 from ..models import AssetBalance, Balance, Invoice, InvoicePage, Service, Wallet, WalletDeposit
@@ -154,7 +154,7 @@ class Invoices(Resource):
         )
         return self._invoke(APICall("/api/v2/invoice/list", payload, InvoicePage.model_validate))
 
-    def services(self) -> list[Service]:
+    def services(self) -> List[Service]:
         """List the payment methods available to your merchant, with limits and fees.
 
         Returns:
@@ -204,7 +204,7 @@ class Invoices(Resource):
             APICall("/api/v2/invoice/wallet/create", payload, Wallet.model_validate)
         )
 
-    def list_wallets(self, *, limit: int = 100, offset: int = 0) -> list[Wallet]:
+    def list_wallets(self, *, limit: int = 100, offset: int = 0) -> List[Wallet]:
         """List your static deposit wallets.
 
         Args:
@@ -225,7 +225,7 @@ class Invoices(Resource):
             )
         )
 
-    def wallet_deposits(self, *, wallet_uuid: str) -> list[WalletDeposit]:
+    def wallet_deposits(self, *, wallet_uuid: str) -> List[WalletDeposit]:
         """List the deposits received at one static wallet.
 
         Args:

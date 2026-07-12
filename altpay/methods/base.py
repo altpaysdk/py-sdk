@@ -10,7 +10,7 @@ clients.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Generic, TypeVar, Union
+from typing import Any, Callable, Generic, TypeVar
 
 T = TypeVar("T")
 
