@@ -19,7 +19,7 @@ from .base import APICall, Resource, drop_none
 class Invoices(Resource):
     """Invoice and static-wallet operations. Reached via ``client.invoices``.
 
-    On the sync client every method returns its result directly; on the async client it
+    On the sync client every method returns its result directly. On the async client it
     returns an awaitable of the same result (``await client.invoices.create(...)``).
     """
 
@@ -42,26 +42,28 @@ class Invoices(Resource):
 
         Args:
             uuid: Your idempotency key / order reference (1-64 chars). Echoed back as the
-                invoice ``uuid`` and in webhooks as ``merchant_reference``. Reusing a value
-                does not deduplicate server-side, so keep it unique per order.
+                invoice ``uuid`` and in webhooks as ``merchant_reference``. Idempotent
+                server-side: creating again with the same ``uuid`` returns the original
+                invoice rather than a duplicate, so a network retry is safe. Use a distinct
+                value per order.
             amount: The amount to charge, greater than zero. Passed as a string to preserve
-                precision - prefer a Decimal over a float.
+                precision; prefer a Decimal over a float.
             fiat_currency: The invoice currency (``RUB``, ``USD`` or ``EUR``).
             lifetime: Minutes until the invoice expires, 60-1440 (default 60).
             networks: If given, restrict the payer to exactly these methods/networks.
             except_networks: If given, hide these methods/networks from the payer.
-            url_callback: Your webhook URL; AltPay POSTs a signed ``payment.updated`` event
+            url_callback: Your webhook URL. AltPay POSTs a signed ``payment.updated`` event
                 here when the invoice is paid. Verify it with :class:`altpay.WebhookVerifier`.
             url_success: Optional redirect after a successful payment.
             url_return: Optional redirect after the payer cancels.
-            fee_paid_by: Who bears the platform commission - :attr:`~altpay.enums.FeePaidBy.MERCHANT`
-                (default; deducted from your settlement) or
-                :attr:`~altpay.enums.FeePaidBy.CUSTOMER` (added on top of what the payer is
-                charged). Omit to use the server default (``MERCHANT``).
+            fee_paid_by: Who bears the platform commission. :attr:`~altpay.enums.FeePaidBy.MERCHANT`
+                (default) deducts it from your settlement; :attr:`~altpay.enums.FeePaidBy.CUSTOMER`
+                adds it on top of what the payer is charged. Omit to use the server default
+                (``MERCHANT``).
             **extra: Additional fields forwarded verbatim in the request body. Lets you use
-                invoice options the server adds after this SDK version without upgrading -
-                pass e.g. ``discount_percent=5``. Explicit arguments above take precedence
-                over the same key given here.
+                invoice options the server adds after this SDK version without upgrading,
+                e.g. ``discount_percent=5``. Explicit arguments above take precedence over
+                the same key given here.
 
         Returns:
             The created :class:`~altpay.models.Invoice` (status ``WAITING``).
@@ -73,8 +75,8 @@ class Invoices(Resource):
 
         API reference: https://docs.altpay.money/docs/invoices#create
         """
-        # Unknown/forward-compatible fields first, so the explicit, validated arguments
-        # below always win on any key collision.
+        # Forward-compatible fields first, so the explicit validated arguments below win on
+        # any key collision.
         payload = dict(extra)
         payload.update(
             drop_none(
@@ -246,7 +248,7 @@ class Invoices(Resource):
     def assets(self, *, fiat_currency: FiatCurrency | str = FiatCurrency.USD) -> AssetBalance:
         """Get your per-token balance valued in one fiat, with allocation percentages.
 
-        Richer than :meth:`balance`: lists every supported asset (zero if unheld), each with
+        Richer than :meth:`balance`. Lists every supported asset (zero if unheld), each with
         a ``withdrawable`` flag and its share of the fiat total.
 
         Args:

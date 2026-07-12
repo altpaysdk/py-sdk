@@ -51,10 +51,13 @@ class AltPay:
         credentials: Your merchant credentials.
         base_url: API root (default ``https://api.altpay.money``). Override for staging.
         timeout: Per-request timeout in seconds (default 30).
-        max_retries: How many times to retry a request that failed transiently - a network
+        max_retries: How many times to retry a request that failed transiently: a network
             error, a 5xx, or a 429. Retries use exponential backoff and honor ``Retry-After``.
-            Set to 0 to disable. Only idempotent reads and create-with-your-own-uuid are
-            safe to retry, which is the whole public surface.
+            Each attempt is re-signed with a fresh nonce so retries pass the server's replay
+            check. Set to 0 to disable. Reads are inherently idempotent. ``invoices.create``
+            is idempotent on your ``uuid`` and ``withdrawals.create`` on its
+            ``idempotency_key``, so a retried write with the same key returns the original
+            result instead of duplicating. Pass those keys on any call you let retry.
         http_client: Bring your own configured :class:`httpx.Client` (proxies, custom TLS,
             etc.). If given, ``base_url``/``timeout`` on the httpx client are used and this
             class will not close it for you.
@@ -102,14 +105,17 @@ class AltPay:
         ``APICall`` and pass it here implicitly; use :meth:`call` directly only for advanced
         or custom calls.
         """
-        request = prepare(
-            credentials=self._credentials,
-            base_url=self._base_url,
-            path=call.path,
-            payload=call.payload,
-        )
         attempt = 0
         while True:
+            # Re-sign on every attempt: each request carries a fresh nonce and timestamp.
+            # The server rejects a reused nonce inside the signature TTL (replay protection),
+            # so a retry that resent the original headers would 401 instead of retrying.
+            request = prepare(
+                credentials=self._credentials,
+                base_url=self._base_url,
+                path=call.path,
+                payload=call.payload,
+            )
             try:
                 response = self._http.request(
                     request.method, request.url, headers=request.headers, content=request.content

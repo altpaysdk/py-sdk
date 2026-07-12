@@ -39,7 +39,7 @@ print(invoice.status)                # PaymentStatus.WAITING | PAID | EXPIRED | 
 
 ### Async
 
-The async client mirrors the sync one exactly; just `await` the calls.
+The async client mirrors the sync one. `await` the calls.
 
 ```python
 from altpay import AsyncAltPay, Credentials
@@ -60,8 +60,13 @@ async with AsyncAltPay(creds) as client:
 | | `list(status=..., cursor=..., limit=...)` | page through invoices |
 | | `services()` | available methods, limits and fees |
 | | `balance(fiat_currency=...)` | balance valued in one fiat, per asset |
+| | `assets(fiat_currency=...)` | per-token balance with allocation + `withdrawable` |
 | | `create_wallet(network=..., order_id=...)` | static deposit wallet |
 | | `list_wallets(limit=..., offset=...)` | list static wallets |
+| | `wallet_deposits(wallet_uuid=...)` | deposits received at a static wallet |
+| `client.withdrawals` | `estimate_fee(asset=..., network=...)` | preview payout fees |
+| | `create(asset=..., amount=..., address=..., idempotency_key=...)` | request a payout to a trusted address |
+| | `list(limit=..., offset=...)` | list payout requests |
 | `client.account` | `get()` | merchant + API-key identity |
 | | `balance()` | paid volume per method (native asset) |
 | | `statistics()` | aggregate counts and USD volume |
@@ -69,8 +74,8 @@ async with AsyncAltPay(creds) as client:
 ## Webhooks
 
 AltPay POSTs a signed `payment.updated` event to your `url_callback` when an invoice is
-paid. **Always verify the signature before trusting the body**, and pass the *raw* request
-bytes (not the re-serialized JSON).
+paid. **Always verify the signature before trusting the body**, and pass the raw request
+bytes, not the re-serialized JSON.
 
 ```python
 from altpay import WebhookVerifier
@@ -84,6 +89,33 @@ if event.status == "paid":
 ```
 
 `verifier.verify(raw_body, headers)` returns a bool if you prefer to branch yourself.
+
+Verification is not deduplication: AltPay may deliver the same event more than once, and both
+copies verify. Make fulfilment idempotent by keying it on `event.payment_id`, so a repeat is a no-op.
+
+## Withdrawals (payouts)
+
+Request a payout with `client.withdrawals`. For safety the public API can **only** send to an
+address you already trusted in the dashboard (adding one requires your 2FA), so a leaked API
+key cannot invent a new destination. At most it can repeat a payout to an address you already
+trust.
+
+```python
+fee = client.withdrawals.estimate_fee(asset="USDT", network="USDT_TRC20")
+
+payout = client.withdrawals.create(
+    asset="USDT",
+    amount="50.00",
+    address="T...",                 # must already be a trusted address for USDT
+    network="USDT_TRC20",
+    idempotency_key="payout-42",    # a retry with the same key returns the original payout
+)
+print(payout.status)                # WithdrawalStatus.PENDING (an operator approves it)
+```
+
+Always pass `idempotency_key`: the amount is reserved from your balance the moment the request
+is accepted, and the key is what makes a network retry return the original payout instead of
+debiting you twice. A trusted-but-wrong `address` still moves funds, so verify it before calling.
 
 ## Errors
 
@@ -121,12 +153,12 @@ AltPay(
 )
 ```
 
-## Authentication, in brief
+## Authentication
 
 Each request is signed with HMAC-SHA256 over a canonical string of the merchant id, API key,
-timestamp, nonce, body hash, method and path. The SDK does this for you; the secret never
-leaves your process. If you ever need the primitives (custom transport, testing), they live
-in `altpay.signing`. Full spec: <https://docs.altpay.money/docs/authentication>.
+timestamp, nonce, body hash, method and path. The SDK signs every request; the secret never
+leaves your process. The primitives (for custom transport or testing) live in
+`altpay.signing`. Full spec: <https://docs.altpay.money/docs/authentication>.
 
 ## Requirements
 

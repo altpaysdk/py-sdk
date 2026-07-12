@@ -1,7 +1,7 @@
 """The asynchronous client, :class:`AsyncAltPay`.
 
-The async twin of :class:`~altpay.client.sync_client.AltPay`. Same API, same resources, same
-request/response logic from :mod:`altpay.client.base`; only the I/O is awaited.
+The async twin of :class:`~altpay.client.sync_client.AltPay`. Same API, same resources,
+and the same request/response logic from :mod:`altpay.client.base`; only the I/O is awaited.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class AsyncAltPay:
             )
             print(invoice.url)
 
-    Args mirror :class:`~altpay.client.sync_client.AltPay`; ``http_client`` here is an
+    Args mirror :class:`~altpay.client.sync_client.AltPay`. Here ``http_client`` is an
     :class:`httpx.AsyncClient`.
 
     API reference: https://docs.altpay.money/docs
@@ -74,20 +74,23 @@ class AsyncAltPay:
         await self.aclose()
 
     async def aclose(self) -> None:
-        """Close the underlying HTTP connection pool (unless you supplied your own client)."""
+        """Close the underlying HTTP connection pool, unless you supplied your own client."""
         if self._owns_client:
             await self._http.aclose()
 
     async def call(self, call: APICall[T]) -> T:
         """Execute a described :class:`~altpay.methods.base.APICall` and return its typed result."""
-        request = prepare(
-            credentials=self._credentials,
-            base_url=self._base_url,
-            path=call.path,
-            payload=call.payload,
-        )
         attempt = 0
         while True:
+            # Re-sign on every attempt: each request carries a fresh nonce and timestamp.
+            # The server rejects a reused nonce inside the signature TTL (replay protection),
+            # so a retry that resent the original headers would 401 instead of retrying.
+            request = prepare(
+                credentials=self._credentials,
+                base_url=self._base_url,
+                path=call.path,
+                payload=call.payload,
+            )
             try:
                 response = await self._http.request(
                     request.method, request.url, headers=request.headers, content=request.content
