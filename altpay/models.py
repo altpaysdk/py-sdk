@@ -211,7 +211,7 @@ class Statistics(_Model):
 
     Attributes:
         total_invoices: Count of all invoices ever created.
-        paid_invoices: Count that reached ``PAYED``.
+        paid_invoices: Count that reached ``PAID``.
         expired_invoices: Count that expired.
         total_volume_usd: Total paid volume valued in USD.
         average_amount_usd: Average invoice amount in USD.
@@ -345,7 +345,7 @@ class WebhookEvent(_Model):
         payment_id: AltPay's payment UUID.
         merchant_reference: Your ``uuid`` from invoice creation, if any.
         external_id: AltPay's ``order_id`` for the invoice.
-        status: The new payment status (``PAYED`` for a successful payment).
+        status: The new payment status (``PAID`` for a successful payment).
         invoice_amount: The invoice amount in :attr:`invoice_currency`.
         invoice_currency: The invoice currency.
         invoice_amount_usd: The invoice amount valued in USD.

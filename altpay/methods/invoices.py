@@ -54,7 +54,7 @@ class Invoices(Resource):
             url_return: Optional redirect after the payer cancels.
 
         Returns:
-            The created :class:`~altpay.models.Invoice` (status ``CREATED``).
+            The created :class:`~altpay.models.Invoice` (status ``WAITING``).
 
         Raises:
             altpay.ValidationError: A field is missing or invalid (amount <= 0, lifetime out
@@ -113,7 +113,7 @@ class Invoices(Resource):
         """List invoices, newest first, with cursor pagination.
 
         Args:
-            status: Filter by status (e.g. ``PaymentStatus.PAYED``).
+            status: Filter by status (e.g. ``PaymentStatus.PAID``).
             date_from: ISO-8601 lower bound on creation time (inclusive).
             date_to: ISO-8601 upper bound on creation time.
             cursor: The ``next_cursor`` from a previous page; omit for the first page.

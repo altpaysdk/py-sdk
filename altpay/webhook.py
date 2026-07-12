@@ -76,7 +76,7 @@ class WebhookVerifier:
 
             verifier = WebhookVerifier(secret, target="/altpay/webhook")
             event = verifier.parse(raw_body, request.headers)
-            if event.status == "PAYED":
+            if event.status == "paid":
                 fulfil(event.merchant_reference)
         """
         if not self.verify(body, headers):

@@ -34,7 +34,7 @@ print(invoice.url)                   # hosted checkout URL to redirect the payer
 
 # later, check on it
 invoice = client.invoices.get(order_id=invoice.order_id)
-print(invoice.status)                # PaymentStatus.CREATED | PAYED | EXPIRED | ...
+print(invoice.status)                # PaymentStatus.WAITING | PAID | EXPIRED | ...
 ```
 
 ### Async
@@ -79,7 +79,7 @@ verifier = WebhookVerifier(WEBHOOK_SECRET, target="/altpay/webhook")
 
 # inside your handler (framework-agnostic):
 event = verifier.parse(raw_body, request_headers)   # raises AuthenticationError on a bad sig
-if event.status == "PAYED":
+if event.status == "paid":
     fulfil_order(event.merchant_reference)
 ```
 

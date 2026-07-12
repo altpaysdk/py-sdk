@@ -1,7 +1,7 @@
 """Enumerations used across the public API.
 
 These mirror the server's vocabulary exactly. Each is a ``str`` enum, so a member compares
-equal to its wire value (``PaymentStatus.PAYED == "PAYED"``) and serializes transparently -
+equal to its wire value (``PaymentStatus.PAID == "paid"``) and serializes transparently -
 you can pass either a member or the raw string anywhere the SDK accepts one.
 """
 
@@ -13,26 +13,32 @@ from enum import Enum
 class PaymentStatus(str, Enum):
     """Lifecycle state of an invoice.
 
-    * ``CREATED`` - issued, awaiting payment.
-    * ``INCOMPLETE`` - underpaid (received less than due); still open.
-    * ``PAYED`` - fully paid and confirmed (final). The webhook fires on this transition.
+    * ``WAITING`` - issued, awaiting payment.
+    * ``PARTIAL`` - underpaid (received less than due); still open.
+    * ``PAID`` - fully paid and confirmed (final). The webhook fires on this transition.
     * ``EXPIRED`` - the lifetime window elapsed before payment (final).
     * ``FAILED`` - the payment failed or was rejected (final).
 
-    ``CREATED``/``INCOMPLETE`` are non-final; the other three are final
+    ``WAITING``/``PARTIAL`` are non-final; the other three are final
     (see :attr:`is_final`).
+
+    The member values are the wire strings of the public REST API
+    (``"waiting"``, ``"paid"``, ...). The webhook (``payment.updated``) reports the
+    same lifecycle with the server's *internal* uppercase names (``"CREATED"``,
+    ``"PAYED"``, ...); :meth:`_missing_` maps those onto the same members so both
+    transports decode to one canonical value.
     """
 
-    CREATED = "CREATED"
-    PAYED = "PAYED"
-    INCOMPLETE = "INCOMPLETE"
-    EXPIRED = "EXPIRED"
-    FAILED = "FAILED"
+    WAITING = "waiting"
+    PARTIAL = "partial"
+    PAID = "paid"
+    EXPIRED = "expired"
+    FAILED = "failed"
 
     @property
     def is_final(self) -> bool:
-        """Whether no further status change is possible (PAYED, EXPIRED or FAILED)."""
-        return self in (PaymentStatus.PAYED, PaymentStatus.EXPIRED, PaymentStatus.FAILED)
+        """Whether no further status change is possible (PAID, EXPIRED or FAILED)."""
+        return self in (PaymentStatus.PAID, PaymentStatus.EXPIRED, PaymentStatus.FAILED)
 
 
 class PaymentMethod(str, Enum):
